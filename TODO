@@ -1,7 +1,7 @@
 Still to do:
  * Cleanly report Xlib errors
- * Retrieval of bounding box of text without displaying it
  * Support for wide chars (wchar_t)
  * Support for bold and italics
  * Support for fallback fonts
  * Document
+ * Fix Fantasque Sans Mono ascent/descent (or is it a font issue?)

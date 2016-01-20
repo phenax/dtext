@@ -5,6 +5,7 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include FT_ADVANCES_H
 
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrender.h>
@@ -107,6 +108,33 @@ dt_free(dt_context *ctx, dt_font *fnt)
 	free(fnt);
 
 	return err;
+}
+
+dt_error
+dt_box(dt_font *fnt, dt_bbox *bbox, char const *txt)
+{
+	dt_error err;
+	size_t len;
+	size_t i;
+	FT_Fixed adv;
+
+	if (!(len = strlen(txt)))
+		return -EINVAL;
+
+	memset(bbox, 0, sizeof(*bbox));
+
+	bbox->x = 0;
+	bbox->y = - (fnt->face->ascender >> 6);
+
+	for (i = 0; i < len; ++i) {
+		if ((err = FT_Get_Advance(fnt->face, txt[i], 0, &adv)))
+			return err;
+		bbox->w += adv >> 16;
+	}
+
+	bbox->h = fnt->face->height >> 6;
+
+	return 0;
 }
 
 dt_error
