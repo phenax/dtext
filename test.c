@@ -12,6 +12,11 @@
 
 #include "dtext.h"
 
+#define TEXT "The quick brown fox jumps over the lazy dog."
+//#define FONT "/usr/share/fonts/fantasque-sans-mono/FantasqueSansMono-Regular.otf"
+#define FONT "/usr/share/fonts/inconsolata/Inconsolata-Regular.ttf"
+//#define FONT "/usr/share/fonts/libertine/LinLibertine_R.otf"
+
 Display *dpy;
 Window win;
 GC gc;
@@ -72,11 +77,9 @@ static void setup_dt()
 {
 	assert(!dt_init(&ctx, dpy, win));
 
-	assert(!dt_load(ctx, &fnt, 16, "/usr/share/fonts/fantasque-sans-mono/FantasqueSansMono-Regular.otf"));
-	//assert(!dt_load(ctx, &fnt, 16, "/usr/share/fonts/libertine/LinLibertine_R.otf"));
+	assert(!dt_load(ctx, &fnt, 16, FONT));
 
 	memset(&style, 0, sizeof(style));
-
 	memset(&style_inv, 0, sizeof(style_inv));
 	style_inv.red = 0xFF;
 	style_inv.green = 0xFF;
@@ -85,10 +88,10 @@ static void setup_dt()
 
 static void draw()
 {
-	assert(!dt_draw(ctx, fnt, &style, 10, 50, "The quick brown fox jumps over the lazy dog."));
+	assert(!dt_draw(ctx, fnt, &style, 10, 50, TEXT));
 
 	XFillRectangle(dpy, win, gc, 5, 60, 400, 100);
-	assert(!dt_draw(ctx, fnt, &style_inv, 10, 90, "The quick brown fox jumps over the lazy dog."));
+	assert(!dt_draw(ctx, fnt, &style_inv, 10, 90, TEXT));
 
 	XFlush(dpy);
 }
