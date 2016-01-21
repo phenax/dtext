@@ -12,7 +12,7 @@
 
 #include "dtext.h"
 
-#define TEXT "The quick brown fox jumps over the lazy dog."
+#define TEXT L"The quick brown fox jumps over the lazy dog."
 //#define FONT "/usr/share/fonts/fantasque-sans-mono/FantasqueSansMono-Regular.otf"
 #define FONT "/usr/share/fonts/inconsolata/Inconsolata-Regular.ttf"
 //#define FONT "/usr/share/fonts/libertine/LinLibertine_R.otf"

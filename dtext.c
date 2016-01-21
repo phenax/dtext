@@ -2,6 +2,7 @@
 
 #include <errno.h>
 #include <stdint.h>
+#include <wchar.h>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -12,7 +13,9 @@
 
 #include "dtext.h"
 
-static dt_error load_char(dt_context *ctx, dt_font *fnt, char c);
+static dt_error load_char(dt_context *ctx, dt_font *fnt, wchar_t c);
+static uint8_t hash_get(dt_row map[DT_HASH_SIZE], wchar_t key, uint8_t def);
+static dt_error hash_set(dt_row map[DT_HASH_SIZE], wchar_t key, uint8_t val);
 
 dt_error
 dt_init(dt_context **res, Display *dpy, Window win)
@@ -84,7 +87,7 @@ dt_load(dt_context *ctx, dt_font **res, uint8_t size, char const *name)
 		goto fail_char_size;
 
 	fnt->gs = XRenderCreateGlyphSet(ctx->dpy, ctx->argb32_format);
-	memset(fnt->loaded, 0, 256);
+	memset(fnt->loaded, 0, DT_HASH_SIZE * sizeof(fnt->loaded[0]));
 
 	*res = fnt;
 	return 0;
@@ -111,14 +114,14 @@ dt_free(dt_context *ctx, dt_font *fnt)
 }
 
 dt_error
-dt_box(dt_font *fnt, dt_bbox *bbox, char const *txt)
+dt_box(dt_font *fnt, dt_bbox *bbox, wchar_t const *txt)
 {
 	dt_error err;
 	size_t len;
 	size_t i;
 	FT_Fixed adv;
 
-	if (!(len = strlen(txt)))
+	if (!(len = wcslen(txt)))
 		return -EINVAL;
 
 	memset(bbox, 0, sizeof(*bbox));
@@ -139,7 +142,7 @@ dt_box(dt_font *fnt, dt_bbox *bbox, char const *txt)
 
 dt_error
 dt_draw(dt_context *ctx, dt_font *fnt, dt_style const *style,
-        uint32_t x, uint32_t y, char const *txt)
+        uint32_t x, uint32_t y, wchar_t const *txt)
 {
 	dt_error err;
 	XRenderColor col;
@@ -152,20 +155,30 @@ dt_draw(dt_context *ctx, dt_font *fnt, dt_style const *style,
 	col.alpha = 0xFFFF - ((style->alpha << 8) + style->alpha);
 	XRenderFillRectangle(ctx->dpy, PictOpSrc, ctx->fill, &col, 0, 0, 1, 1);
 
-	len = strlen(txt);
+	len = wcslen(txt);
 
 	for (i = 0; i < len; ++i)
 		if ((err = load_char(ctx, fnt, txt[i])))
 			return err;
 
-	XRenderCompositeString8(ctx->dpy, PictOpOver, ctx->fill, ctx->pic,
-	                        ctx->argb32_format, fnt->gs, 0, 0, x, y,
-	                        txt, len);
+#define DO_COMPOSITE(Size, Type) \
+	XRenderCompositeString ## Size(ctx->dpy, PictOpOver, ctx->fill, \
+	                               ctx->pic, ctx->argb32_format, \
+	                               fnt->gs, 0, 0, x, y, \
+	                               (Type const *) txt, len)
+	if (sizeof(wchar_t) == 1)
+		DO_COMPOSITE(8, char);
+	else if (sizeof(wchar_t) == 2)
+		DO_COMPOSITE(16, uint16_t);
+	else
+		DO_COMPOSITE(32, uint32_t);
+#undef DO_COMPOSITE
+
 	return 0;
 }
 
 static dt_error
-load_char(dt_context *ctx, dt_font *fnt, char c)
+load_char(dt_context *ctx, dt_font *fnt, wchar_t c)
 {
 	dt_error err;
 	FT_GlyphSlot slot;
@@ -174,7 +187,7 @@ load_char(dt_context *ctx, dt_font *fnt, char c)
 	char *img;
 	size_t x, y, i;
 
-	if (fnt->loaded[(uint8_t) c])
+	if (hash_get(fnt->loaded, c, 0))
 		return 0;
 
 	if ((err = FT_Load_Char(fnt->face, c, FT_LOAD_RENDER)))
@@ -203,6 +216,51 @@ load_char(dt_context *ctx, dt_font *fnt, char c)
 
 	free(img);
 
-	fnt->loaded[(uint8_t) c] = 1;
+	return hash_set(fnt->loaded, c, 1);
+}
+
+static uint8_t
+hash_get(dt_row map[DT_HASH_SIZE], wchar_t key, uint8_t def)
+{
+	dt_row row;
+	size_t i;
+
+	row = map[key % DT_HASH_SIZE];
+	for (i = 0; i < row.len; ++i)
+		if (row.data[i].k == key)
+			return row.data[i].v;
+
+	return def;
+}
+
+static dt_error
+hash_set(dt_row map[DT_HASH_SIZE], wchar_t key, uint8_t val)
+{
+	dt_row row;
+	dt_pair *d;
+	size_t i;
+
+	row = map[key % DT_HASH_SIZE];
+
+	for (i = 0; i < row.len; ++i) {
+		if (row.data[i].k == key) {
+			row.data[i].v = val;
+			return 0;
+		}
+	}
+
+	if (row.allocated == row.len) {
+		d = row.data;
+		if (!(d = realloc(d, (2 * row.len + 1) * sizeof(d[0]))))
+			return -ENOMEM;
+		row.data = d;
+		row.allocated = 2 * row.len + 1;
+	}
+	++row.len;
+
+	row.data[row.len - 1].k = key;
+	row.data[row.len - 1].v = val;
+
+	map[key % DT_HASH_SIZE] = row;
 	return 0;
 }

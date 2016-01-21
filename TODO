@@ -1,6 +1,6 @@
 Still to do:
  * Cleanly report Xlib errors
- * Support for wide chars (wchar_t)
+ * Do not re-render glyphs both for bbox computation and actual drawing
  * Support for bold and italics
  * Support for fallback fonts
  * Document

@@ -14,10 +14,22 @@ typedef struct {
 } dt_context;
 
 typedef struct {
+	wchar_t k;
+	uint8_t v;
+} dt_pair;
+
+typedef struct {
+	dt_pair *data;
+	size_t len;
+	size_t allocated;
+} dt_row;
+
+#define DT_HASH_SIZE 1
+typedef struct {
 	FT_Face face;
 
 	GlyphSet gs;
-	uint8_t loaded[256];
+	dt_row loaded[DT_HASH_SIZE];
 } dt_font;
 
 typedef struct {
@@ -42,6 +54,6 @@ dt_error dt_load(dt_context *ctx, dt_font **fnt,
                  uint8_t size, char const *name);
 dt_error dt_free(dt_context *ctx, dt_font *fnt);
 
-dt_error dt_box(dt_font *fnt, dt_bbox *bbox, char const *txt);
+dt_error dt_box(dt_font *fnt, dt_bbox *bbox, wchar_t const *txt);
 dt_error dt_draw(dt_context *ctx, dt_font *fnt, dt_style const *style,
-                 uint32_t x, uint32_t y, char const *txt);
+                 uint32_t x, uint32_t y, wchar_t const *txt);
