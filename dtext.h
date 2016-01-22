@@ -24,7 +24,7 @@ typedef struct {
 	size_t allocated;
 } dt_row;
 
-#define DT_HASH_SIZE 1
+#define DT_HASH_SIZE 128
 typedef struct {
 	FT_Face face;
 
