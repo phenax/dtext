@@ -14,8 +14,8 @@
 #include "dtext.h"
 
 static dt_error load_char(dt_context *ctx, dt_font *fnt, wchar_t c);
-static uint8_t hash_get(dt_row map[DT_HASH_SIZE], wchar_t key, uint8_t def);
-static dt_error hash_set(dt_row map[DT_HASH_SIZE], wchar_t key, uint8_t val);
+static uint16_t hash_get(dt_row map[DT_HASH_SIZE], wchar_t key, uint16_t def);
+static dt_error hash_set(dt_row map[DT_HASH_SIZE], wchar_t key, uint16_t val);
 
 dt_error
 dt_init(dt_context **res, Display *dpy, Window win)
@@ -87,7 +87,7 @@ dt_load(dt_context *ctx, dt_font **res, uint8_t size, char const *name)
 		goto fail_char_size;
 
 	fnt->gs = XRenderCreateGlyphSet(ctx->dpy, ctx->argb32_format);
-	memset(fnt->loaded, 0, DT_HASH_SIZE * sizeof(fnt->loaded[0]));
+	memset(fnt->advance, 0, sizeof(fnt->advance));
 
 	*res = fnt;
 	return 0;
@@ -114,12 +114,11 @@ dt_free(dt_context *ctx, dt_font *fnt)
 }
 
 dt_error
-dt_box(dt_font *fnt, dt_bbox *bbox, wchar_t const *txt)
+dt_box(dt_context *ctx, dt_font *fnt, dt_bbox *bbox, wchar_t const *txt)
 {
 	dt_error err;
 	size_t len;
 	size_t i;
-	FT_Fixed adv;
 
 	if (!(len = wcslen(txt)))
 		return -EINVAL;
@@ -130,9 +129,9 @@ dt_box(dt_font *fnt, dt_bbox *bbox, wchar_t const *txt)
 	bbox->y = - (fnt->face->ascender >> 6);
 
 	for (i = 0; i < len; ++i) {
-		if ((err = FT_Get_Advance(fnt->face, txt[i], 0, &adv)))
+		if ((err = load_char(ctx, fnt, txt[i])))
 			return err;
-		bbox->w += adv >> 16;
+		bbox->w += hash_get(fnt->advance, txt[i], 0);
 	}
 
 	bbox->h = fnt->face->height >> 6;
@@ -187,7 +186,7 @@ load_char(dt_context *ctx, dt_font *fnt, wchar_t c)
 	char *img;
 	size_t x, y, i;
 
-	if (hash_get(fnt->loaded, c, 0))
+	if (hash_get(fnt->advance, c, 0))
 		return 0;
 
 	if ((err = FT_Load_Char(fnt->face, c, FT_LOAD_RENDER)))
@@ -216,11 +215,11 @@ load_char(dt_context *ctx, dt_font *fnt, wchar_t c)
 
 	free(img);
 
-	return hash_set(fnt->loaded, c, 1);
+	return hash_set(fnt->advance, c, slot->advance.x >> 6);
 }
 
-static uint8_t
-hash_get(dt_row map[DT_HASH_SIZE], wchar_t key, uint8_t def)
+static uint16_t
+hash_get(dt_row map[DT_HASH_SIZE], wchar_t key, uint16_t def)
 {
 	dt_row row;
 	size_t i;
@@ -234,7 +233,7 @@ hash_get(dt_row map[DT_HASH_SIZE], wchar_t key, uint8_t def)
 }
 
 static dt_error
-hash_set(dt_row map[DT_HASH_SIZE], wchar_t key, uint8_t val)
+hash_set(dt_row map[DT_HASH_SIZE], wchar_t key, uint16_t val)
 {
 	dt_row row;
 	dt_pair *d;

@@ -1,6 +1,5 @@
 Still to do:
  * Cleanly report Xlib errors
- * Do not re-render glyphs both for bbox computation and actual drawing
  * Support for bold and italics
  * Support for fallback fonts
  * Document
