@@ -13,6 +13,7 @@
 
 #include "dtext.h"
 
+static dt_error load_face(dt_context *ctx, FT_Face *face, char const *name);
 static dt_error load_char(dt_context *ctx, dt_font *fnt, wchar_t c);
 static uint16_t hash_get(dt_row map[DT_HASH_SIZE], wchar_t key, uint16_t def);
 static dt_error hash_set(dt_row map[DT_HASH_SIZE], wchar_t key, uint16_t val);
@@ -73,40 +74,48 @@ dt_quit(dt_context *ctx)
 }
 
 dt_error
-dt_load(dt_context *ctx, dt_font **res, uint8_t size, char const *name)
+dt_load(dt_context *ctx, dt_font **res, char const *name)
 {
 	dt_error err;
 	dt_font *fnt;
+	size_t i;
+	size_t len;
+	char *face;
 
 	if (!(fnt = malloc(sizeof(*fnt))))
 		return -ENOMEM;
 
-	if ((err = FT_New_Face(ctx->ft_lib, name, 0, &fnt->face)))
-		goto fail_new_face;
-	if ((err = FT_Set_Char_Size(fnt->face, size << 6, 0, 0, 0)))
-		goto fail_char_size;
+	fnt->num_faces = 1;
+	for (i = 0; name[i]; ++i)
+		fnt->num_faces += (name[i] == ';');
+
+	fnt->faces = malloc(fnt->num_faces * sizeof(fnt->faces[0]));
+	for (i = 0; i < fnt->num_faces; ++i) {
+		len = strchr(name, ';') - name;
+		face = strndup(name, len);
+		if ((err = load_face(ctx, &fnt->faces[i], face)))
+			return err;
+		name += len + 1;
+		free(face);
+	}
 
 	fnt->gs = XRenderCreateGlyphSet(ctx->dpy, ctx->argb32_format);
 	memset(fnt->advance, 0, sizeof(fnt->advance));
 
 	*res = fnt;
 	return 0;
-
-fail_char_size:
-	FT_Done_Face(fnt->face); // if this fails... just ignore
-fail_new_face:
-	free(fnt);
-	return err;
 }
 
 dt_error
 dt_free(dt_context *ctx, dt_font *fnt)
 {
 	dt_error err = 0;
+	size_t i;
 
 	XRenderFreeGlyphSet(ctx->dpy, fnt->gs);
 
-	err = FT_Done_Face(fnt->face);
+	for (i = 0; i < fnt->num_faces; ++i)
+		err += FT_Done_Face(fnt->faces[i]);
 
 	free(fnt);
 
@@ -126,7 +135,7 @@ dt_box(dt_context *ctx, dt_font *fnt, dt_bbox *bbox, wchar_t const *txt)
 	memset(bbox, 0, sizeof(*bbox));
 
 	bbox->x = 0;
-	bbox->y = - (fnt->face->ascender >> 6);
+	bbox->y = - (fnt->faces[0]->ascender >> 6);
 
 	for (i = 0; i < len; ++i) {
 		if ((err = load_char(ctx, fnt, txt[i])))
@@ -134,7 +143,7 @@ dt_box(dt_context *ctx, dt_font *fnt, dt_bbox *bbox, wchar_t const *txt)
 		bbox->w += hash_get(fnt->advance, txt[i], 0);
 	}
 
-	bbox->h = fnt->face->height >> 6;
+	bbox->h = fnt->faces[0]->height >> 6;
 
 	return 0;
 }
@@ -177,10 +186,38 @@ dt_draw(dt_context *ctx, dt_font *fnt, dt_style const *style,
 }
 
 static dt_error
+load_face(dt_context *ctx, FT_Face *face, char const *name) {
+	dt_error err;
+	char *file;
+	char *colon;
+	size_t size;
+
+	colon = strchr(name, ':');
+	if (!colon)
+		return -EINVAL;
+
+	file = strndup(name, colon - name);
+	name = colon + 1;
+
+	size = strtoul(name, 0, 10);
+
+	if ((err = FT_New_Face(ctx->ft_lib, file, 0, face)))
+		return err;
+	if ((err = FT_Set_Char_Size(*face, size << 6, 0, 0, 0))) {
+		FT_Done_Face(*face);
+		return err;
+	}
+
+	return 0;
+}
+
+
+static dt_error
 load_char(dt_context *ctx, dt_font *fnt, wchar_t c)
 {
 	dt_error err;
-	FT_GlyphSlot slot;
+	FT_UInt code;
+	FT_GlyphSlot slot = 0;
 	Glyph gid;
 	XGlyphInfo g;
 	char *img;
@@ -189,9 +226,17 @@ load_char(dt_context *ctx, dt_font *fnt, wchar_t c)
 	if (hash_get(fnt->advance, c, 0))
 		return 0;
 
-	if ((err = FT_Load_Char(fnt->face, c, FT_LOAD_RENDER)))
+	for (i = 0; i < fnt->num_faces; ++i) {
+		code = FT_Get_Char_Index(fnt->faces[i], c);
+		if (!code)
+			continue;
+
+		if ((err = FT_Load_Glyph(fnt->faces[i], code, FT_LOAD_RENDER)))
+			continue;
+		slot = fnt->faces[i]->glyph;
+	}
+	if (!slot)
 		return err;
-	slot = fnt->face->glyph;
 
 	gid = c;
 

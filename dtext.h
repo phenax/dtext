@@ -26,7 +26,8 @@ typedef struct {
 
 #define DT_HASH_SIZE 128
 typedef struct {
-	FT_Face face;
+	FT_Face *faces;
+	size_t num_faces;
 
 	GlyphSet gs;
 	dt_row advance[DT_HASH_SIZE];
@@ -50,8 +51,7 @@ typedef struct {
 dt_error dt_init(dt_context **ctx, Display *dpy, Window win);
 dt_error dt_quit(dt_context *ctx);
 
-dt_error dt_load(dt_context *ctx, dt_font **fnt,
-                 uint8_t size, char const *name);
+dt_error dt_load(dt_context *ctx, dt_font **fnt, char const *name);
 dt_error dt_free(dt_context *ctx, dt_font *fnt);
 
 dt_error dt_box(dt_context *ctx, dt_font *fnt, dt_bbox *bbox,

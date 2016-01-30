@@ -1,6 +1,10 @@
 Still to do:
  * Cleanly report Xlib errors
- * Support for bold and italics
- * Support for fallback fonts
+ * Setup a scheme for error reporting
+ * Cleanup bounding box handling: only return length, and compute height on a
+   font-wide basis?
+ * In dt_load, gracefully handle case when one face refuses to load (ie. free
+   already allocated stuff before returning an error)
+ * Support for faces other than the first
  * Document
  * Fix Fantasque Sans Mono ascent/descent (or is it a font issue?)

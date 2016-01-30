@@ -12,10 +12,11 @@
 
 #include "dtext.h"
 
-#define TEXT L"The quick brown fox jumps over the lazy dog."
-//#define FONT "/usr/share/fonts/fantasque-sans-mono/FantasqueSansMono-Regular.otf"
-#define FONT "/usr/share/fonts/inconsolata/Inconsolata-Regular.ttf"
-//#define FONT "/usr/share/fonts/libertine/LinLibertine_R.otf"
+#define TEXT L"The quick brown fox jumps over the lazy dog. "
+//#define FONT "/usr/share/fonts/fantasque-sans-mono/FantasqueSansMono-Regular.otf:16"
+#define FONT "/usr/share/fonts/inconsolata/Inconsolata-Regular.ttf:16;" \
+             "/usr/share/fonts/powerline-symbols/PowerlineSymbols.otf:14"
+//#define FONT "/usr/share/fonts/libertine/LinLibertine_R.otf:16"
 
 Display *dpy;
 Window win;
@@ -77,7 +78,7 @@ static void setup_dt()
 {
 	assert(!dt_init(&ctx, dpy, win));
 
-	assert(!dt_load(ctx, &fnt, 16, FONT));
+	assert(!dt_load(ctx, &fnt, FONT));
 
 	memset(&style, 0, sizeof(style));
 	memset(&style_inv, 0, sizeof(style_inv));
