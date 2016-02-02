@@ -1,7 +1,6 @@
 Still to do:
  * Cleanly report Xlib errors
  * Setup a scheme for error reporting
- * Compute row height (/ char width ?) on font-wide basis
  * In dt_load, gracefully handle case when one face refuses to load (ie. free
    already allocated stuff before returning an error)
  * Support for faces other than the first

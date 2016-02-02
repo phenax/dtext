@@ -94,8 +94,11 @@ static void draw()
 	assert(!dt_draw(ctx, fnt, &style, 10, 50, TEXT));
 
 	assert(!dt_box(ctx, fnt, &bbox, TEXT));
-	XFillRectangle(dpy, win, gc, 10 + bbox.x, 90 + bbox.y, bbox.w, bbox.h);
-	assert(!dt_draw(ctx, fnt, &style_inv, 10, 90, TEXT));
+	XFillRectangle(dpy, win, gc, 10 + bbox.x, 100 + bbox.y, bbox.w, bbox.h);
+	assert(!dt_draw(ctx, fnt, &style_inv, 10, 100, TEXT));
+
+	XFillRectangle(dpy, win, gc, 10 + bbox.x, 150 - fnt->ascent, bbox.w, fnt->height);
+	assert(!dt_draw(ctx, fnt, &style_inv, 10, 150, TEXT));
 
 	XFlush(dpy);
 }

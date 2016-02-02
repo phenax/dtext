@@ -28,6 +28,9 @@ typedef struct {
 
 #define DT_HASH_SIZE 128
 typedef struct {
+	uint16_t height;
+	uint16_t ascent;
+
 	FT_Face *faces;
 	size_t num_faces;
 

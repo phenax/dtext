@@ -13,6 +13,9 @@
 
 #include "dtext.h"
 
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#define min(a, b) ((a) < (b) ? (a) : (b))
+
 static dt_error load_face(dt_context *ctx, FT_Face *face, char const *name);
 static dt_error load_char(dt_context *ctx, dt_font *fnt, wchar_t c);
 
@@ -83,6 +86,7 @@ dt_load(dt_context *ctx, dt_font **res, char const *name)
 	size_t i;
 	size_t len;
 	char *face;
+	int16_t descent;
 
 	if (!(fnt = malloc(sizeof(*fnt))))
 		return -ENOMEM;
@@ -103,6 +107,13 @@ dt_load(dt_context *ctx, dt_font **res, char const *name)
 
 	fnt->gs = XRenderCreateGlyphSet(ctx->dpy, ctx->argb32_format);
 	memset(fnt->advance, 0, sizeof(fnt->advance));
+
+	fnt->ascent = descent = 0;
+	for (i = 0; i < fnt->num_faces; ++i) {
+		fnt->ascent = max(fnt->ascent, fnt->faces[i]->ascender >> 6);
+		descent = min(descent, fnt->faces[i]->descender >> 6);
+	}
+	fnt->height = fnt->ascent - descent;
 
 	*res = fnt;
 	return 0;
@@ -142,8 +153,6 @@ dt_box(dt_context *ctx, dt_font *fnt, dt_bbox *bbox, wchar_t const *txt)
 			return err;
 		p = hash_get(fnt->advance, txt[i]);
 		bbox->w += p->adv;
-#define max(a, b) ((a) > (b) ? (a) : (b))
-#define min(a, b) ((a) < (b) ? (a) : (b))
 		bbox->h = max(p->h, bbox->h + max(0, bbox->y - p->asc));
 		bbox->y = min(p->asc, bbox->y);
 	}
