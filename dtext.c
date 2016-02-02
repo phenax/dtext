@@ -15,8 +15,10 @@
 
 static dt_error load_face(dt_context *ctx, FT_Face *face, char const *name);
 static dt_error load_char(dt_context *ctx, dt_font *fnt, wchar_t c);
-static uint16_t hash_get(dt_row map[DT_HASH_SIZE], wchar_t key, uint16_t def);
-static dt_error hash_set(dt_row map[DT_HASH_SIZE], wchar_t key, uint16_t val);
+
+static dt_pair hash_unavailable = { 0 };
+static dt_pair const *hash_get(dt_row map[DT_HASH_SIZE], wchar_t key);
+static dt_error hash_set(dt_row map[DT_HASH_SIZE], dt_pair val);
 
 dt_error
 dt_init(dt_context **res, Display *dpy, Window win)
@@ -128,22 +130,23 @@ dt_box(dt_context *ctx, dt_font *fnt, dt_bbox *bbox, wchar_t const *txt)
 	dt_error err;
 	size_t len;
 	size_t i;
+	dt_pair const *p;
 
 	if (!(len = wcslen(txt)))
 		return -EINVAL;
 
 	memset(bbox, 0, sizeof(*bbox));
 
-	bbox->x = 0;
-	bbox->y = - (fnt->faces[0]->ascender >> 6);
-
 	for (i = 0; i < len; ++i) {
 		if ((err = load_char(ctx, fnt, txt[i])))
 			return err;
-		bbox->w += hash_get(fnt->advance, txt[i], 0);
+		p = hash_get(fnt->advance, txt[i]);
+		bbox->w += p->adv;
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#define min(a, b) ((a) < (b) ? (a) : (b))
+		bbox->h = max(p->h, bbox->h + max(0, bbox->y - p->asc));
+		bbox->y = min(p->asc, bbox->y);
 	}
-
-	bbox->h = fnt->faces[0]->height >> 6;
 
 	return 0;
 }
@@ -223,7 +226,7 @@ load_char(dt_context *ctx, dt_font *fnt, wchar_t c)
 	char *img;
 	size_t x, y, i;
 
-	if (hash_get(fnt->advance, c, 0))
+	if (hash_get(fnt->advance, c) != &hash_unavailable)
 		return 0;
 
 	for (i = 0; i < fnt->num_faces; ++i) {
@@ -260,35 +263,40 @@ load_char(dt_context *ctx, dt_font *fnt, wchar_t c)
 
 	free(img);
 
-	return hash_set(fnt->advance, c, slot->advance.x >> 6);
+	return hash_set(fnt->advance, (dt_pair) {
+		.c = c,
+		.adv = slot->advance.x >> 6,
+		.asc = - slot->metrics.horiBearingY >> 6,
+		.h = slot->metrics.height >> 6
+	});
 }
 
-static uint16_t
-hash_get(dt_row map[DT_HASH_SIZE], wchar_t key, uint16_t def)
+static dt_pair const *
+hash_get(dt_row map[DT_HASH_SIZE], wchar_t key)
 {
 	dt_row row;
 	size_t i;
 
 	row = map[key % DT_HASH_SIZE];
 	for (i = 0; i < row.len; ++i)
-		if (row.data[i].k == key)
-			return row.data[i].v;
+		if (row.data[i].c == key)
+			return &row.data[i];
 
-	return def;
+	return &hash_unavailable;
 }
 
 static dt_error
-hash_set(dt_row map[DT_HASH_SIZE], wchar_t key, uint16_t val)
+hash_set(dt_row map[DT_HASH_SIZE], dt_pair val)
 {
 	dt_row row;
 	dt_pair *d;
 	size_t i;
 
-	row = map[key % DT_HASH_SIZE];
+	row = map[val.c % DT_HASH_SIZE];
 
 	for (i = 0; i < row.len; ++i) {
-		if (row.data[i].k == key) {
-			row.data[i].v = val;
+		if (row.data[i].c == val.c) {
+			row.data[i] = val;
 			return 0;
 		}
 	}
@@ -302,9 +310,8 @@ hash_set(dt_row map[DT_HASH_SIZE], wchar_t key, uint16_t val)
 	}
 	++row.len;
 
-	row.data[row.len - 1].k = key;
-	row.data[row.len - 1].v = val;
+	row.data[row.len - 1] = val;
 
-	map[key % DT_HASH_SIZE] = row;
+	map[val.c % DT_HASH_SIZE] = row;
 	return 0;
 }

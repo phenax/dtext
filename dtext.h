@@ -14,8 +14,10 @@ typedef struct {
 } dt_context;
 
 typedef struct {
-	wchar_t k;  // char
-	uint16_t v; // advance
+	wchar_t c;  // char
+	uint16_t adv; // advance
+	int16_t asc; // ascender
+	uint16_t h; // height
 } dt_pair;
 
 typedef struct {
