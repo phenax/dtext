@@ -1,6 +1,4 @@
 Still to do:
- * Cleanly report Xlib errors
- * Setup a scheme for error reporting
- * Support for faces other than the first
  * Document
+ * Support for faces other than the first
  * Add FontConfig optional support for last-resort fallback font (?)
