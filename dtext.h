@@ -54,10 +54,10 @@ typedef struct {
 } dt_style;
 
 dt_error dt_init(dt_context **ctx, Display *dpy, Window win);
-dt_error dt_quit(dt_context *ctx);
+void dt_quit(dt_context *ctx);
 
 dt_error dt_load(dt_context *ctx, dt_font **fnt, char const *name);
-dt_error dt_free(dt_context *ctx, dt_font *fnt);
+void dt_free(dt_context *ctx, dt_font *fnt);
 
 dt_error dt_box(dt_context *ctx, dt_font *fnt, dt_bbox *bbox,
                 wchar_t const *txt);

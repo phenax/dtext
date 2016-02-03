@@ -1,8 +1,6 @@
 Still to do:
  * Cleanly report Xlib errors
  * Setup a scheme for error reporting
- * In dt_load, gracefully handle case when one face refuses to load (ie. free
-   already allocated stuff before returning an error)
  * Support for faces other than the first
  * Document
  * Add FontConfig optional support for last-resort fallback font (?)

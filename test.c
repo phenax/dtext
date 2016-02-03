@@ -38,6 +38,9 @@ int main()
 	_Xdebug = 1;
 
 	setup_x();
+
+	assert(!dt_init(&ctx, dpy, win));
+	assert(!dt_load(ctx, &fnt, FONT));
 	setup_dt();
 
 	draw();
@@ -55,6 +58,10 @@ int main()
 			break;
 		}
 	}
+
+	dt_free(ctx, fnt);
+	dt_quit(ctx);
+	XCloseDisplay(dpy);
 }
 
 static void setup_x()
@@ -76,10 +83,6 @@ static void setup_x()
 
 static void setup_dt()
 {
-	assert(!dt_init(&ctx, dpy, win));
-
-	assert(!dt_load(ctx, &fnt, FONT));
-
 	memset(&style, 0, sizeof(style));
 	memset(&style_inv, 0, sizeof(style_inv));
 	style_inv.red = 0xFF;
