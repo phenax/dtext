@@ -51,7 +51,7 @@ typedef struct {
 	uint8_t green;
 	uint8_t blue;
 	uint8_t alpha; // 0 means opaque
-} dt_style;
+} dt_color;
 
 dt_error dt_init(dt_context **ctx, Display *dpy, Window win);
 void dt_quit(dt_context *ctx);
@@ -61,5 +61,5 @@ void dt_free(dt_context *ctx, dt_font *fnt);
 
 dt_error dt_box(dt_context *ctx, dt_font *fnt, dt_bbox *bbox,
                 wchar_t const *txt);
-dt_error dt_draw(dt_context *ctx, dt_font *fnt, dt_style const *style,
+dt_error dt_draw(dt_context *ctx, dt_font *fnt, dt_color const *color,
                  uint32_t x, uint32_t y, wchar_t const *txt);

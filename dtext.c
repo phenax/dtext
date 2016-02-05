@@ -160,7 +160,7 @@ dt_box(dt_context *ctx, dt_font *fnt, dt_bbox *bbox, wchar_t const *txt)
 }
 
 dt_error
-dt_draw(dt_context *ctx, dt_font *fnt, dt_style const *style,
+dt_draw(dt_context *ctx, dt_font *fnt, dt_color const *color,
         uint32_t x, uint32_t y, wchar_t const *txt)
 {
 	dt_error err;
@@ -168,10 +168,10 @@ dt_draw(dt_context *ctx, dt_font *fnt, dt_style const *style,
 	size_t len;
 	size_t i;
 
-	col.red   = (style->red   << 8) + style->red;
-	col.green = (style->green << 8) + style->green;
-	col.blue  = (style->blue  << 8) + style->blue;
-	col.alpha = 0xFFFF - ((style->alpha << 8) + style->alpha);
+	col.red   = (color->red   << 8) + color->red;
+	col.green = (color->green << 8) + color->green;
+	col.blue  = (color->blue  << 8) + color->blue;
+	col.alpha = 0xFFFF - ((color->alpha << 8) + color->alpha);
 	XRenderFillRectangle(ctx->dpy, PictOpSrc, ctx->fill, &col, 0, 0, 1, 1);
 
 	len = wcslen(txt);
