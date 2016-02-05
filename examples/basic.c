@@ -84,10 +84,12 @@ static void setup_x()
 static void setup_dt()
 {
 	memset(&color, 0, sizeof(color));
+	color.alpha = 0xFF;
 	memset(&color_inv, 0, sizeof(color_inv));
 	color_inv.red = 0xFF;
 	color_inv.green = 0xFF;
 	color_inv.blue = 0xFF;
+	color_inv.alpha = 0xFF;
 }
 
 static void draw()

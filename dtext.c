@@ -171,7 +171,7 @@ dt_draw(dt_context *ctx, dt_font *fnt, dt_color const *color,
 	col.red   = (color->red   << 8) + color->red;
 	col.green = (color->green << 8) + color->green;
 	col.blue  = (color->blue  << 8) + color->blue;
-	col.alpha = 0xFFFF - ((color->alpha << 8) + color->alpha);
+	col.alpha = (color->alpha << 8) + color->alpha;
 	XRenderFillRectangle(ctx->dpy, PictOpSrc, ctx->fill, &col, 0, 0, 1, 1);
 
 	len = wcslen(txt);
