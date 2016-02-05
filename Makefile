@@ -2,18 +2,15 @@
 
 include config.mk
 
-SRC = dtext.c test.c
-HDR = dtext.h
+EXECS := $(patsubst examples/%.c,build/%,$(wildcard examples/*.c))
 
-all: example
+all: $(EXECS)
 
-test: example
-	./example
-
-example: config.mk Makefile ${SRC} ${HDR}
-	${CC} ${CFLAGS} ${LDFLAGS} ${SRC} -o example
+build/%: examples/%.c dtext.c dtext.h config.mk Makefile
+	[ -d build ] || mkdir build
+	${CC} -I. ${CFLAGS} ${LDFLAGS} $< dtext.c -o $@
 
 clean:
-	rm -f example
+	rm -f $(EXECS)
 
-.PHONY: all test clean
+.PHONY: all clean
