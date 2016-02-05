@@ -2,7 +2,6 @@
 
 #include <errno.h>
 #include <stdint.h>
-#include <wchar.h>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -137,16 +136,15 @@ dt_free(dt_context *ctx, dt_font *fnt)
 }
 
 dt_error
-dt_box(dt_context *ctx, dt_font *fnt, dt_bbox *bbox, wchar_t const *txt)
+dt_box(dt_context *ctx, dt_font *fnt, dt_bbox *bbox,
+       wchar_t const *txt, size_t len)
 {
 	dt_error err;
-	size_t len;
 	size_t i;
 	dt_pair const *p;
 
 	memset(bbox, 0, sizeof(*bbox));
 
-	len = wcslen(txt);
 	for (i = 0; i < len; ++i) {
 		if ((err = load_char(ctx, fnt, txt[i])))
 			return err;
@@ -161,11 +159,10 @@ dt_box(dt_context *ctx, dt_font *fnt, dt_bbox *bbox, wchar_t const *txt)
 
 dt_error
 dt_draw(dt_context *ctx, dt_font *fnt, dt_color const *color,
-        uint32_t x, uint32_t y, wchar_t const *txt)
+        uint32_t x, uint32_t y, wchar_t const *txt, size_t len)
 {
 	dt_error err;
 	XRenderColor col;
-	size_t len;
 	size_t i;
 
 	col.red   = (color->red   << 8) + color->red;
@@ -173,8 +170,6 @@ dt_draw(dt_context *ctx, dt_font *fnt, dt_color const *color,
 	col.blue  = (color->blue  << 8) + color->blue;
 	col.alpha = (color->alpha << 8) + color->alpha;
 	XRenderFillRectangle(ctx->dpy, PictOpSrc, ctx->fill, &col, 0, 0, 1, 1);
-
-	len = wcslen(txt);
 
 	for (i = 0; i < len; ++i)
 		if ((err = load_char(ctx, fnt, txt[i])))

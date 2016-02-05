@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <wchar.h>
 
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
@@ -96,14 +97,14 @@ static void draw()
 {
 	dt_bbox bbox;
 
-	assert(!dt_draw(ctx, fnt, &color, 10, 50, TEXT));
+	assert(!dt_draw(ctx, fnt, &color, 10, 50, TEXT, wcslen(TEXT)));
 
-	assert(!dt_box(ctx, fnt, &bbox, TEXT));
+	assert(!dt_box(ctx, fnt, &bbox, TEXT, wcslen(TEXT)));
 	XFillRectangle(dpy, win, gc, 10 + bbox.x, 100 + bbox.y, bbox.w, bbox.h);
-	assert(!dt_draw(ctx, fnt, &color_inv, 10, 100, TEXT));
+	assert(!dt_draw(ctx, fnt, &color_inv, 10, 100, TEXT, wcslen(TEXT)));
 
 	XFillRectangle(dpy, win, gc, 10 + bbox.x, 150 - fnt->ascent, bbox.w, fnt->height);
-	assert(!dt_draw(ctx, fnt, &color_inv, 10, 150, TEXT));
+	assert(!dt_draw(ctx, fnt, &color_inv, 10, 150, TEXT, wcslen(TEXT)));
 
 	XFlush(dpy);
 }

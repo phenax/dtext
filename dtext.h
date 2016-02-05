@@ -60,6 +60,6 @@ dt_error dt_load(dt_context *ctx, dt_font **fnt, char const *name);
 void dt_free(dt_context *ctx, dt_font *fnt);
 
 dt_error dt_box(dt_context *ctx, dt_font *fnt, dt_bbox *bbox,
-                wchar_t const *txt);
+                wchar_t const *txt, size_t len);
 dt_error dt_draw(dt_context *ctx, dt_font *fnt, dt_color const *color,
-                 uint32_t x, uint32_t y, wchar_t const *txt);
+                 uint32_t x, uint32_t y, wchar_t const *txt, size_t len);
