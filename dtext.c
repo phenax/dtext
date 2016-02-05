@@ -242,6 +242,7 @@ load_char(dt_context *ctx, dt_font *fnt, wchar_t c)
 		if ((err = FT_Load_Glyph(fnt->faces[i], code, FT_LOAD_RENDER)))
 			continue;
 		slot = fnt->faces[i]->glyph;
+		break;
 	}
 	if (!slot) {
 		if ((err = FT_Load_Char(fnt->faces[0], c, FT_LOAD_RENDER)))
