@@ -87,7 +87,7 @@ In order to test them, just run `make` and run the executables in `build/`.
 Distribution
 ------------
 
-This code is distributed at http://git.ekleog.org/leo/dtext ; and every commit
+This code is distributed at https://git.ekleog.org/leo/dtext ; and every commit
 should be signed with OpenPGP key
 
     AA29 BF0D F468 A8DC 1AB0  EA84 6598 F235 F23F B2AE
