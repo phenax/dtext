@@ -5,8 +5,8 @@ WARN_CFLAGS = -Wall -Wextra -pedantic -D_XOPEN_SOURCE=700
 DBG_CFLAGS  = -g
 DBG_LDFLAGS = -g
 
-FT_CFLAGS  = `freetype-config --cflags`
-FT_LDFLAGS = `freetype-config --libs`
+FT_CFLAGS  = `pkg-config --cflags freetype2`
+FT_LDFLAGS = `pkg-config --libs freetype2`
 
 XLIB_CFLAGS  = -I/usr/X11R6/include/
 XLIB_LDFLAGS = -lX11 -lXrender
