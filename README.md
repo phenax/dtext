@@ -1,4 +1,4 @@
-dtext
+dtext fork (https://git.ekleog.org/leo/dtext)
 =====
 
 `dtext` is a font-rendering library that aims at simplicity, both of the
